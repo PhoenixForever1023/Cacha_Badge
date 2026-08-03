@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 直播间抽吧唧</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 820px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #ffffff;
+            color: #1a1a2e;
+            border-radius: 20px;
+        }
+        h1 { text-align: center; margin-top: 0; font-size: 32px; color: #1a1a2e; }
+        h1 span { color: #93f2ff; }
+
+        .card {
+            background: rgba(154, 201, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #ffffff;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== 抽奖行标签 - 全白 ===== */
+        .card .flex-row > span {
+            color: #ffffff;
+            opacity: 1;
+            font-weight: 500;
+        }
+        .hint {
+            color: #ffffff;
+            opacity: 0.8;
+            font-size: 13px;
+        }
+
+        input {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            outline: none;
+            transition: background 0.2s;
+        }
+        input:focus {
+            background: rgba(255,255,255,0.25);
+        }
+        input::placeholder { color: rgba(255,255,255,0.4); }
+        input[type="number"] { width: 80px; }
+        input[type="text"] { width: 200px; }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        button:hover { transform: scale(1.03); }
+        button:active { transform: scale(0.97); }
+
+        .btn-primary { background: #93f2ff; color: #1a1a2e; }
+        .btn-primary:hover { box-shadow: 0 0 25px rgba(30,233,247,0.5); }
+
+        .btn-success { background: #b8a5ff; color: #fff; }
+        .btn-success:hover { box-shadow: 0 0 25px rgba(139,114,229,0.5); }
+
+        .btn-pink { background: #ffc5dc; color: #1a1a2e; }
+        .btn-pink:hover { box-shadow: 0 0 25px rgba(247,161,196,0.5); }
+
+        .btn-info { background: #85f2c6; color: #1a1a2e; }
+        .btn-info:hover { box-shadow: 0 0 25px rgba(145,203,245,0.5); }
+
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .text-muted { opacity: 0.7; font-size: 14px; }
+
+        /* ===== 结果框 - 白底深色文字 ===== */
+        .result-box {
+            background: #ffffff;
+            padding: 18px 22px;
+            border-radius: 12px;
+            min-height: 60px;
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            border-left: 5px solid #5bb8e8;
+            margin-top: 12px;
+            color: #0a0a1a;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            border: 1px solid #e8f4fd;
+        }
+        .result-box .highlight {
+            color: #4a9ed6;
+            font-weight: 700;
+            font-size: 26px;
+        }
+        .result-box .item-name {
+            color: #4a9ed6;
+            font-weight: 700;
+        }
+        .result-box .error-text {
+            color: #e94560;
+            font-weight: 600;
+        }
+
+        /* ===== 批量结果框 - 白底深色文字 ===== */
+        .batch-results {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-top: 10px;
+            font-size: 16px;
+            line-height: 2.0;
+            color: #0a0a1a;
+            border: 1px solid #e8f4fd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .batch-results::-webkit-scrollbar { width: 6px; }
+        .batch-results::-webkit-scrollbar-thumb { background: #c5dff0; border-radius: 3px; }
+        .batch-results::-webkit-scrollbar-track { background: #f5f9fc; }
+        .batch-results .hit {
+            color: #4a9ed6;
+            font-weight: 700;
+        }
+        .batch-results .num {
+            color: #f7971e;
+            font-weight: 700;
+        }
+        .batch-results .error-item {
+            color: #e94560;
+            font-weight: 600;
+        }
+        .batch-results .title {
+            color: #0a0a1a;
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 17px;
+        }
+        .batch-results .remain-info {
+            color: #666;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        .batch-results .remain-info strong {
+            color: #4a9ed6;
+            font-weight: 700;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .status-item {
+            background: #ffffff;
+            color: #1a1a2e;
+            padding: 10px 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e8f4fd;
+        }
+        .status-item .count {
+            font-size: 26px;
+            font-weight: bold;
+            color: #5bb8e8;
+        }
+        .status-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        .status-summary {
+            color: #ffffff;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .status-summary strong { color: #fff; }
+        .status-summary .highlight-blue { color: #7ec8f0; }
+    </style>
+</head>
+<body>
+
+<h1>来直播间<span>抽探q夏日白裙吧</span></h1>
+
+<!-- ===== 1. 创建池子 ===== -->
+<div class="card">
+    <h3>📦 创建池子</h3>
+    <div class="flex-row">
+        <input type="number" id="totalInput" value="50" min="1" max="9999">
+        <button class="btn-primary" onclick="createPool()">⚡ 生成池子</button>
+        <span class="badge" id="poolIdDisplay">未创建</span>
+    </div>
+    <div id="poolInfo" class="text-muted" style="margin-top: 10px;"></div>
+</div>
+
+<!-- ===== 2. 抽奖 ===== -->
+<div class="card">
+    <h3>🎯 抽奖</h3>
+
+    <!-- 第一行：随机抽 -->
+    <div class="flex-row" style="margin-bottom: 10px;">
+        <span>🎲 随机抽</span>
+        <input type="number" id="batchSize" value="1" min="1" max="100" style="width:70px;">
+        <span>发</span>
+        <button class="btn-success" onclick="drawRandom()">🚀 抽！</button>
+    </div>
+
+    <!-- 第二行：指定号码抽 -->
+    <div class="flex-row">
+        <span>🔢 指定号</span>
+        <input type="text" id="numberInput" placeholder="例: 3 或 3,7,12" style="width:200px;">
+        <button class="btn-pink" onclick="drawNumbers()">🎯 抽！</button>
+        <span class="hint">用逗号或空格分隔</span>
+    </div>
+
+    <div id="drawResult" class="result-box">💡 等待抽奖...</div>
+    <div id="batchResult" class="batch-results" style="display:none;"></div>
+</div>
+
+<!-- ===== 3. 状态 ===== -->
+<div class="card">
+    <h3>📊 已抽统计</h3>
+    <div class="flex-row">
+        <button class="btn-info" onclick="getStatus()">🔄 刷新</button>
+        <span class="badge" id="statusBadge">就绪</span>
+    </div>
+    <div id="statusDisplay" class="status-summary">暂无池子</div>
+    <div id="statusGrid" class="status-grid"></div>
+</div>
+
+<script>
+// ============================================================
+//  配置
+// ============================================================
+const ITEMS = [
+    "明治安娜半身", "明治安娜大头",
+    "小林未来半身", "小林未来大头",
+    "帆羽来爱半身", "帆羽来爱大头",
+    "森亚露露卡半身", "森亚露露卡大头",
+    "杰特前辈半身", "杰特前辈大头"
+];
+const WEIGHTS = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10];
+
+// ============================================================
+//  状态
+// ============================================================
+let pool = [];
+let drawnHistory = [];
+
+// ============================================================
+//  工具函数
+// ============================================================
+function weightedRandom() {
+    const total = WEIGHTS.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < ITEMS.length; i++) {
+        r -= WEIGHTS[i];
+        if (r <= 0) return ITEMS[i];
+    }
+    return ITEMS[ITEMS.length - 1];
+}
+
+// ============================================================
+//  1. 创建池子
+// ============================================================
+function createPool() {
+    const input = document.getElementById('totalInput');
+    let total = parseInt(input.value) || 50;
+    if (total < 1) total = 1;
+    if (total > 9999) total = 9999;
+
+    pool = [];
+    for (let i = 0; i < total; i++) {
+        pool.push(weightedRandom());
+    }
+    drawnHistory = [];
+
+    document.getElementById('poolIdDisplay').textContent = `✅ ${total}发`;
+    document.getElementById('poolInfo').textContent = `池子已生成，共 ${total} 发（各款式概率均等）`;
+    document.getElementById('drawResult').innerHTML = '💡 池子已就绪，开始抽吧！';
+    document.getElementById('drawResult').style.borderLeftColor = '#5bb8e8';
+    document.getElementById('batchResult').style.display = 'none';
+    getStatus();
+}
+
+// ============================================================
+//  2. 核心抽奖函数（pop 逻辑）
+// ============================================================
+function doDraw(count, numbers) {
+    const results = [];
+    const errors = [];
+
+    if (numbers === null) {
+        for (let i = 0; i < count; i++) {
+            if (pool.length === 0) {
+                errors.push(`第 ${i+1} 发时池子已空`);
+                break;
+            }
+            const idx = Math.floor(Math.random() * pool.length);
+            const num = idx + 1;
+            const item = pool[idx];
+            pool.splice(idx, 1);
+            drawnHistory.push({ num, item });
+            results.push({ num, item });
+        }
+    } else {
+        const sorted = [...numbers].sort((a, b) => b - a);
+        for (const num of sorted) {
+            if (pool.length === 0) {
+                errors.push(`号码 ${num} 池子已空`);
+                continue;
+            }
+            if (num < 1 || num > pool.length) {
+                errors.push(`号码 ${num} 超出范围(1~${pool.length})`);
+                continue;
+            }
+            const idx = num - 1;
+            const item = pool[idx];
+            pool.splice(idx, 1);
+            drawnHistory.push({ num, item });
+            results.push({ num, item });
+        }
+        results.sort((a, b) => a.num - b.num);
+    }
+
+    return { results, errors };
+}
+
+// ============================================================
+//  3. 随机抽
+// ============================================================
+function drawRandom() {
+    if (pool.length === 0) {
+        showResult('❌ 请先创建池子！', '#e94560');
+        return;
+    }
+
+    const input = document.getElementById('batchSize');
+    let count = parseInt(input.value) || 1;
+    if (count < 1) count = 1;
+    if (count > pool.length) count = pool.length;
+
+    const { results, errors } = doDraw(count, null);
+    displayResults(results, errors, '🎲 随机抽');
+    document.getElementById('batchResult').style.display = 'block';
+    getStatus();
+}
+
+// ============================================================
+//  4. 指定号码抽
+// ============================================================
+function drawNumbers() {
+    if (pool.length === 0) {
+        showResult('❌ 请先创建池子！', '#e94560');
+        return;
+    }
+
+    const input = document.getElementById('numberInput');
+    const raw = input.value.trim();
+    if (!raw) {
+        showResult('❌ 请输入要抽的号码！', '#e94560');
+        return;
+    }
+
+    const numStrings = raw.split(/[,，\s]+/);
+    const numbers = [];
+    for (const s of numStrings) {
+        const n = parseInt(s);
+        if (!isNaN(n) && n > 0) {
+            numbers.push(n);
+        }
+    }
+
+    if (numbers.length === 0) {
+        showResult('❌ 没有识别到有效的号码！', '#e94560');
+        return;
+    }
+
+    const unique = [...new Set(numbers)];
+    const { results, errors } = doDraw(null, unique);
+    displayResults(results, errors, '🎯 指定号抽');
+    document.getElementById('batchResult').style.display = 'block';
+    document.getElementById('numberInput').value = '';
+    getStatus();
+}
+
+// ============================================================
+//  5. 显示结果
+// ============================================================
+function displayResults(results, errors, title) {
+    const remaining = pool.length;
+
+    let html = `<div class="title">${title}了 ${results.length} 发：</div>`;
+    for (const r of results) {
+        html += `<span class="num">${r.num}</span>号 → <span class="hit">${r.item}</span> &nbsp;|&nbsp; `;
+    }
+    if (errors.length > 0) {
+        html += `<div style="margin-top:8px;color:#e94560;font-weight:600;">⚠️ ${errors.join('；')}</div>`;
+    }
+    html += `<div class="remain-info">剩余 <strong>${remaining}</strong> 发</div>`;
+    
+    const batchDiv = document.getElementById('batchResult');
+    batchDiv.innerHTML = html;
+    batchDiv.style.display = 'block';
+
+    const errorMsg = errors.length > 0 ? `（${errors.length}个错误）` : '';
+    const color = results.length > 0 ? '#5bb8e8' : '#e94560';
+    showResult(`🎉 ${title}了 <span class="highlight">${results.length}</span> 发${errorMsg}，剩余 <span class="highlight">${remaining}</span> 发`, color);
+}
+
+function showResult(msg, color) {
+    const div = document.getElementById('drawResult');
+    div.innerHTML = msg;
+    div.style.borderLeftColor = color;
+}
+
+// ============================================================
+//  6. 状态
+// ============================================================
+function getStatus() {
+    if (pool.length === 0 && drawnHistory.length === 0) {
+        document.getElementById('statusDisplay').textContent = '暂无池子';
+        document.getElementById('statusGrid').innerHTML = '';
+        document.getElementById('statusBadge').textContent = '就绪';
+        return;
+    }
+
+    const remaining = pool.length;
+    const drawn = drawnHistory.length;
+    const total = drawn + remaining;
+    document.getElementById('statusDisplay').innerHTML = 
+        `总 <strong>${total}</strong> 发 &nbsp;|&nbsp; 已抽 <strong style="color:#7ec8f0;">${drawn}</strong> &nbsp;|&nbsp; 剩余 <strong style="color:#f7971e;">${remaining}</strong>`;
+    document.getElementById('statusBadge').textContent = `${drawn}/${total}`;
+
+    const counts = {};
+    for (const entry of drawnHistory) {
+        counts[entry.item] = (counts[entry.item] || 0) + 1;
+    }
+
+    let html = '';
+    let hasAny = false;
+    for (const itemName of ITEMS) {
+        const count = counts[itemName] || 0;
+        if (count > 0) hasAny = true;
+        html += `
+            <div class="status-item">
+                <div class="label">${itemName}</div>
+                <div class="count">${count}</div>
+            </div>
+        `;
+    }
+    if (!hasAny) {
+        html = '<div class="text-muted" style="color:#999;grid-column:1/-1;text-align:center;padding:20px 0;">还没有抽到任何款式 🎯</div>';
+    }
+    document.getElementById('statusGrid').innerHTML = html;
+}
+
+// ============================================================
+//  键盘事件
+// ============================================================
+document.getElementById('batchSize').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') drawRandom();
+});
+
+document.getElementById('numberInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') drawNumbers();
+});
+
+// ============================================================
+//  自动生成
+// ============================================================
+window.onload = createPool;
+</script>
+
+</body>
+</html>
